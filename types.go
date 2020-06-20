@@ -8,7 +8,7 @@ type userCookie struct {
 type Authorization struct {
 	Authorized bool `json:"authorized"`
 	UserID string `json:"userId"`
-	TokenLocation bool `json:"tokenLocation"`
+	TokenLocation string `json:"tokenLocation"`
 }
 
 type Token struct {
