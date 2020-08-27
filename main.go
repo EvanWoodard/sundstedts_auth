@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-const ( 
+const (
 	contentTypeAppJSON = "application/json"
 )
 
@@ -27,7 +27,7 @@ func RegisterUser(host, username, password string) (*Authorization, error) {
 		return nil, err
 	}
 
-	resp, err := http.Post(host + "/auth/register", contentTypeAppJSON, bytes.NewBuffer(requestBody))
+	resp, err := http.Post(host+"/auth/register", contentTypeAppJSON, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func Login(host, username, password string) (*Authorization, error) {
 		return nil, err
 	}
 
-	resp, err := http.Post(host + "/auth/login", contentTypeAppJSON, bytes.NewBuffer(requestBody))
+	resp, err := http.Post(host+"/auth/login", contentTypeAppJSON, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, err
 	}
@@ -98,4 +98,37 @@ func GetToken(r *http.Request, host string) (*Token, error) {
 	json.Unmarshal(body, &t)
 
 	return &t, nil
+}
+
+// GetUserInfo ...
+func GetUserInfo(r *http.Request, host string) (*UserInfo, error) {
+	var ui UserInfo
+
+	cookie, err := getCookie(r, host)
+	if err != nil {
+		return nil, err
+	}
+
+	ui.UserID = cookie.userID
+
+	tl := cookie.tokenLocation
+
+	resp, err := http.Get(host + "/auth/token/" + tl)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	t := Token{}
+	json.Unmarshal(body, &t)
+
+	ui.Token = t
+
+	return &ui, nil
 }
