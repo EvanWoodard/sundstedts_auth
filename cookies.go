@@ -3,7 +3,6 @@ package auth
 import (
 	// std lib
 	"io/ioutil"
-	"log"
 	"net/http"
 	"time"
 
@@ -98,7 +97,6 @@ func getHashKey(host string) (*[]byte, error) {
 		return nil, err
 	}
 	hashKey = body
-	log.Println(body, string(body))
 
 	return &hashKey, nil
 }
