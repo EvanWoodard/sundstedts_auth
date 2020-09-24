@@ -3,6 +3,7 @@ package auth
 import (
 	// std lib
 	"io/ioutil"
+	"log"
 	"net/http"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 )
 
 const cookieName string = "Sundstedts-IAM"
+
 var hashKey []byte
 
 // SetCookie creates a secured http cookie that stores the location of the user's claims token
@@ -21,18 +23,18 @@ func SetCookie(w http.ResponseWriter, host, userID, tokenLocation string) error 
 	}
 	s := securecookie.New(*h, nil)
 
-	v := map[string]string {
-		"userID": userID,
+	v := map[string]string{
+		"userID":        userID,
 		"tokenLocation": tokenLocation,
 	}
 
 	encoded, err := s.Encode(cookieName, v)
 	if err == nil {
 		cookie := &http.Cookie{
-			Name: cookieName,
-			Value: encoded,
-			Domain: ".sundstedt.us",
-			Path: "/",
+			Name:     cookieName,
+			Value:    encoded,
+			Domain:   ".sundstedt.us",
+			Path:     "/",
 			HttpOnly: true,
 		}
 		http.SetCookie(w, cookie)
@@ -44,11 +46,11 @@ func SetCookie(w http.ResponseWriter, host, userID, tokenLocation string) error 
 // UnsetCookie removes the cookie for this user
 func UnsetCookie(w http.ResponseWriter) {
 	c := &http.Cookie{
-		Name: cookieName,
-		Value: "",
-		Domain: ".sundstedt.us",
-		Path: "/",
-		Expires: time.Unix(0, 0),
+		Name:     cookieName,
+		Value:    "",
+		Domain:   ".sundstedt.us",
+		Path:     "/",
+		Expires:  time.Unix(0, 0),
 		HttpOnly: true,
 	}
 
@@ -73,7 +75,7 @@ func getCookie(r *http.Request, host string) (*userCookie, error) {
 	}
 
 	u := userCookie{
-		userID: val["userID"],
+		userID:        val["userID"],
 		tokenLocation: val["tokenLocation"],
 	}
 
@@ -81,7 +83,7 @@ func getCookie(r *http.Request, host string) (*userCookie, error) {
 }
 
 func getHashKey(host string) (*[]byte, error) {
-	if hashKey != nil { 
+	if hashKey != nil {
 		return &hashKey, nil
 	}
 	resp, err := http.Get(host + "/auth/cookiekey")
@@ -96,6 +98,7 @@ func getHashKey(host string) (*[]byte, error) {
 		return nil, err
 	}
 	hashKey = body
+	log.Println(body, string(body))
 
 	return &hashKey, nil
 }
