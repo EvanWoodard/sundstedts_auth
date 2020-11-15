@@ -3,6 +3,7 @@ package auth
 import (
 	// std lib
 	"io/ioutil"
+	"log"
 	"net/http"
 	"time"
 
@@ -61,11 +62,15 @@ func getCookie(r *http.Request, host string) (*userCookie, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Println("HashKey:", h)
+
 	s := securecookie.New(*h, nil)
 	cookie, err := r.Cookie(cookieName)
 	if err != nil {
 		return nil, ErrNotFound
 	}
+
+	log.Println("Cookie", cookie)
 
 	val := make(map[string]string)
 	err = s.Decode(cookieName, cookie.Value, &val)
