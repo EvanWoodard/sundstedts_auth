@@ -35,6 +35,7 @@ func SetCookie(w http.ResponseWriter, host, userID, tokenLocation string) error 
 			Value:    encoded,
 			Domain:   ".sundstedt.us",
 			Path:     "/",
+			Secure:   true,
 			HttpOnly: true,
 		}
 		http.SetCookie(w, cookie)
@@ -51,6 +52,7 @@ func UnsetCookie(w http.ResponseWriter) {
 		Domain:   ".sundstedt.us",
 		Path:     "/",
 		Expires:  time.Unix(0, 0),
+		Secure:   true,
 		HttpOnly: true,
 	}
 
@@ -96,6 +98,8 @@ func getHashKey(host string) (*[]byte, error) {
 	}
 
 	defer resp.Body.Close()
+
+	log.Println("Cookie Key:", resp)
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
