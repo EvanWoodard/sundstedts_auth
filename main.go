@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -106,6 +107,7 @@ func GetUserInfo(r *http.Request, host string) (*UserInfo, error) {
 
 	cookie, err := getCookie(r, host)
 	if err != nil {
+		log.Println("Failed to get cookie", err)
 		return nil, err
 	}
 
@@ -115,6 +117,7 @@ func GetUserInfo(r *http.Request, host string) (*UserInfo, error) {
 
 	resp, err := http.Get(host + "/auth/token/" + tl)
 	if err != nil {
+		log.Println("failed to get token", err)
 		return nil, err
 	}
 
@@ -122,6 +125,7 @@ func GetUserInfo(r *http.Request, host string) (*UserInfo, error) {
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		log.Println("failed to read response", err)
 		return nil, err
 	}
 
