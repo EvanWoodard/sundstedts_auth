@@ -99,13 +99,13 @@ func getHashKey(host string) (*[]byte, error) {
 
 	defer resp.Body.Close()
 
-	log.Println("Cookie Key:", resp)
-
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 	hashKey = body
+
+	log.Println("Cookie Key:", string(hashKey))
 
 	return &hashKey, nil
 }
