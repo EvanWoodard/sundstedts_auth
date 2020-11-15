@@ -2,12 +2,14 @@ package auth
 
 import (
 	// std lib
-	"io/ioutil"
+	"context"
 	"log"
 	"net/http"
 	"time"
 
 	// external lib
+	"cloud.google.com/go/firestore"
+
 	"github.com/gorilla/securecookie"
 )
 
@@ -16,12 +18,13 @@ const cookieName string = "Sundstedts-IAM"
 var hashKey []byte
 
 // SetCookie creates a secured http cookie that stores the location of the user's claims token
-func SetCookie(w http.ResponseWriter, host, userID, tokenLocation string) error {
-	h, err := getHashKey(host)
-	if err != nil {
-		return err
+func SetCookie(w http.ResponseWriter, host, userID, tokenLocation string, fClient *firestore.Client) error {
+	ck := fetchCookieKey(fClient)
+	if ck == "" {
+		return ErrNotFound
 	}
-	s := securecookie.New(*h, nil)
+
+	s := securecookie.New([]byte(ck), nil)
 
 	v := map[string]string{
 		"userID":        userID,
@@ -59,14 +62,31 @@ func UnsetCookie(w http.ResponseWriter) {
 	http.SetCookie(w, c)
 }
 
-func getCookie(r *http.Request, host string) (*userCookie, error) {
-	h, err := getHashKey(host)
-	if err != nil {
-		return nil, err
-	}
-	log.Println("HashKey:", h)
+func fetchCookieKey(fClient *firestore.Client) string {
+	ctx := context.Background()
 
-	s := securecookie.New(*h, nil)
+	ck, err := fClient.Collection("Secrets").Doc("CookieKey").Get(ctx)
+	if err != nil {
+		return ""
+	}
+	ckData := ck.Data()
+	key := ckData["key"]
+	if key == nil {
+		return ""
+	}
+
+	ckm := key.(string)
+
+	return ckm
+}
+
+func getCookie(r *http.Request, host string, fClient *firestore.Client) (*userCookie, error) {
+	ck := fetchCookieKey(fClient)
+	if ck == "" {
+		return nil, ErrNotFound
+	}
+
+	s := securecookie.New([]byte(ck), nil)
 	cookie, err := r.Cookie(cookieName)
 	if err != nil {
 		return nil, ErrNotFound
@@ -86,26 +106,4 @@ func getCookie(r *http.Request, host string) (*userCookie, error) {
 	}
 
 	return &u, nil
-}
-
-func getHashKey(host string) (*[]byte, error) {
-	if hashKey != nil {
-		return &hashKey, nil
-	}
-	resp, err := http.Get(host + "/auth/cookiekey")
-	if err != nil {
-		return nil, err
-	}
-
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	hashKey = body
-
-	log.Println("Cookie Key:", string(hashKey))
-
-	return &hashKey, nil
 }

@@ -8,6 +8,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"cloud.google.com/go/firestore"
 )
 
 const (
@@ -75,8 +77,8 @@ func Login(host, username, password string) (*Authorization, error) {
 }
 
 // GetToken ...
-func GetToken(r *http.Request, host string) (*Token, error) {
-	cookie, err := getCookie(r, host)
+func GetToken(r *http.Request, host string, fClient *firestore.Client) (*Token, error) {
+	cookie, err := getCookie(r, host, fClient)
 	if err != nil {
 		return nil, err
 	}
@@ -102,10 +104,10 @@ func GetToken(r *http.Request, host string) (*Token, error) {
 }
 
 // GetUserInfo ...
-func GetUserInfo(r *http.Request, host string) (*UserInfo, error) {
+func GetUserInfo(r *http.Request, host string, fClient *firestore.Client) (*UserInfo, error) {
 	var ui UserInfo
 
-	cookie, err := getCookie(r, host)
+	cookie, err := getCookie(r, host, fClient)
 	if err != nil {
 		log.Println("Failed to get cookie", err)
 		return nil, err
